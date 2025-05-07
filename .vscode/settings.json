@@ -2,6 +2,7 @@
   "conventionalCommits.scopes": [
     "general",
     "list",
-    "item"
+    "item",
+    "side nav"
   ]
 }

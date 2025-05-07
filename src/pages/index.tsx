@@ -1,5 +1,6 @@
 import EditItemDialog from "@/components/EditItemDialog";
 import ShoppingItem from "@/components/ShoppingItem";
+import SideNav from "@/components/SideNav";
 import { supabase } from "@/lib/supabase";
 import AddIcon from "@mui/icons-material/Add";
 import {
@@ -10,6 +11,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import router from "next/router";
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
@@ -17,19 +19,38 @@ export default function HomePage() {
   const [newItem, setNewItem] = useState({ name: "", quantity: "" });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [itemBeingEdited, setItemBeingEdited] = useState<Item | null>(null);
-  const LIST_ID = "ba4f78a4-2d10-47a1-a70e-094e1f827bdf";
+  const [listId, setListId] = useState<string | null>(null);
+  const [listName, setListName] = useState<string>("");
 
   // Fetch Items aus Supabase
   const fetchItems = async () => {
+    if (!listId) return;
+
     const { data, error } = await supabase
       .from("items")
       .select("*")
-      .eq("list_id", LIST_ID);
+      .eq("list_id", listId);
 
     if (error) {
       console.error("Supabase-Fehler:", error.message);
     } else {
       setItems(data);
+    }
+  };
+
+  const fetchListName = async () => {
+    if (!listId) return;
+
+    const { data, error } = await supabase
+      .from("shopping_lists")
+      .select("name")
+      .eq("id", listId)
+      .single();
+
+    if (error) {
+      console.error("Supabase-Fehler:", error.message);
+    } else {
+      setListName(data.name);
     }
   };
 
@@ -57,8 +78,24 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    fetchItems();
+    const savedListId = localStorage.getItem("lastUsedListId");
+    if (savedListId) {
+      setListId(savedListId);
+    }
   }, []);
+
+  useEffect(() => {
+    if (listId) {
+      fetchItems();
+      fetchListName();
+    }
+  }, [listId]);
+
+  useEffect(() => {
+    if (listId) {
+      localStorage.setItem("lastUsedListId", listId);
+    }
+  }, [listId]);
 
   // Berechnet den nächsten 'order'-Wert
   const getNextOrderValue = () => {
@@ -70,7 +107,7 @@ export default function HomePage() {
     if (newItem.name.trim() === "") return; // Name ist erforderlich
 
     const newItemData = {
-      list_id: LIST_ID,
+      list_id: listId,
       name: newItem.name,
       quantity: newItem.quantity.trim() === "" ? null : newItem.quantity, // Wenn keine Menge angegeben wird, setze sie auf null
       checked: false,
@@ -132,59 +169,70 @@ export default function HomePage() {
   };
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>
-        Einkaufsliste
-      </Typography>
-      <Card sx={{ padding: "10px", display: "flex", gap: 2, marginBottom: 2 }}>
-        <TextField
-          label="Name"
-          variant="outlined"
-          value={newItem.name}
-          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-          sx={{ flex: 2 }}
-        />
-        <TextField
-          label="Menge"
-          variant="outlined"
-          value={newItem.quantity}
-          onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
-          sx={{ flex: 1 }}
-        />
-        <IconButton
-          onClick={handleAddItem}
-          color="primary"
-          sx={{ alignSelf: "center" }}
+    <>
+      <SideNav
+        onSelectList={(id) => setListId(id)}
+        onAddList={() => console.log("Neue Liste erstellen")}
+        onSettings={() => router.push("/settings")}
+      />
+      <Container>
+        <Typography variant="h4" gutterBottom>
+          {listName}
+        </Typography>
+        <Card
+          sx={{ padding: "10px", display: "flex", gap: 2, marginBottom: 2 }}
         >
-          <AddIcon />
-        </IconButton>
-      </Card>
+          <TextField
+            label="Name"
+            variant="outlined"
+            value={newItem.name}
+            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+            sx={{ flex: 2 }}
+          />
+          <TextField
+            label="Menge"
+            variant="outlined"
+            value={newItem.quantity}
+            onChange={(e) =>
+              setNewItem({ ...newItem, quantity: e.target.value })
+            }
+            sx={{ flex: 1 }}
+          />
+          <IconButton
+            onClick={handleAddItem}
+            color="primary"
+            sx={{ alignSelf: "center" }}
+          >
+            <AddIcon />
+          </IconButton>
+        </Card>
 
-      <List>
-        {items
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .map((item) => (
-            <ShoppingItem
-              key={item.id}
-              id={item.id}
-              name={item.name}
-              quantity={item.quantity}
-              checked={item.checked}
-              onToggle={toggleChecked}
-              onDelete={handleDeleteItem}
-              onEditClick={() => openEditDialog(item)}
-            />
-          ))}
-      </List>
-      {itemBeingEdited && (
-        <EditItemDialog
-          open={editDialogOpen}
-          onClose={closeEditDialog}
-          initialName={itemBeingEdited.name}
-          initialQuantity={itemBeingEdited.quantity}
-          onSave={(updated) => handleEditItem(itemBeingEdited.id, updated)}
-        />
-      )}
-    </Container>
+        <List>
+          {items
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+            .map((item) => (
+              <ShoppingItem
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                quantity={item.quantity}
+                checked={item.checked}
+                onToggle={toggleChecked}
+                onDelete={handleDeleteItem}
+                onEditClick={() => openEditDialog(item)}
+              />
+            ))}
+        </List>
+        {itemBeingEdited && (
+          <EditItemDialog
+            open={editDialogOpen}
+            onClose={closeEditDialog}
+            initialName={itemBeingEdited.name}
+            initialQuantity={itemBeingEdited.quantity}
+            onSave={(updated) => handleEditItem(itemBeingEdited.id, updated)}
+          />
+        )}
+      </Container>
+    </>
   );
 }
