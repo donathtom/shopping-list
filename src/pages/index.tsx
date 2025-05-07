@@ -1,6 +1,6 @@
 import EditItemDialog from "@/components/EditItemDialog";
 import ShoppingItem from "@/components/ShoppingItem";
-import { supabase } from "@/lib/supabase"; // Stelle sicher, dass du supabase importiert hast
+import { supabase } from "@/lib/supabase";
 import AddIcon from "@mui/icons-material/Add";
 import {
   Card,
@@ -136,8 +136,6 @@ export default function HomePage() {
       <Typography variant="h4" gutterBottom>
         Einkaufsliste
       </Typography>
-
-      {/* Eingabeformular */}
       <Card sx={{ padding: "10px", display: "flex", gap: 2, marginBottom: 2 }}>
         <TextField
           label="Name"
@@ -163,7 +161,6 @@ export default function HomePage() {
       </Card>
 
       <List>
-        {/* List Items */}
         {items
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
           .map((item) => (

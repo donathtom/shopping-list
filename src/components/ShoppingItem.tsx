@@ -17,7 +17,7 @@ export default function ShoppingItem({
   checked,
   onToggle,
   onDelete,
-  onEditClick, // neu!
+  onEditClick,
 }: ShoppingItemProps & {
   onDelete?: (id: string) => void;
   onEditClick?: () => void;
