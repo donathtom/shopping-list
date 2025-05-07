@@ -1,14 +1,14 @@
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import {
+  Box,
   Card,
   Checkbox,
   IconButton,
   ListItem,
   ListItemButton,
   ListItemText,
-  Box,
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 
 export default function ShoppingItem({
   id,

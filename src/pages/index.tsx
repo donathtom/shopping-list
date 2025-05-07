@@ -3,7 +3,7 @@ import ShoppingItem from "@/components/ShoppingItem";
 import { supabase } from "@/lib/supabase"; // Stelle sicher, dass du supabase importiert hast
 import AddIcon from "@mui/icons-material/Add";
 import {
-  Box,
+  Card,
   Container,
   IconButton,
   List,
@@ -138,30 +138,29 @@ export default function HomePage() {
       </Typography>
 
       {/* Eingabeformular */}
-      <Box sx={{ display: "flex", marginBottom: 2 }}>
+      <Card sx={{ padding: "10px", display: "flex", gap: 2, marginBottom: 2 }}>
         <TextField
           label="Name"
           variant="outlined"
-          fullWidth
           value={newItem.name}
           onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-          sx={{ marginRight: 2 }}
+          sx={{ flex: 2 }}
         />
         <TextField
           label="Menge"
           variant="outlined"
-          fullWidth
           value={newItem.quantity}
           onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
+          sx={{ flex: 1 }}
         />
         <IconButton
           onClick={handleAddItem}
           color="primary"
-          sx={{ marginLeft: 2 }}
+          sx={{ alignSelf: "center" }}
         >
           <AddIcon />
         </IconButton>
-      </Box>
+      </Card>
 
       <List>
         {/* List Items */}
