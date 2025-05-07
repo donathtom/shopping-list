@@ -1,8 +1,9 @@
+import EditItemDialog from "@/components/EditItemDialog";
 import ShoppingItem from "@/components/ShoppingItem";
 import { supabase } from "@/lib/supabase"; // Stelle sicher, dass du supabase importiert hast
 import AddIcon from "@mui/icons-material/Add";
 import {
-  Box,
+  Card,
   Container,
   IconButton,
   List,
@@ -14,6 +15,8 @@ import { useEffect, useState } from "react";
 export default function HomePage() {
   const [items, setItems] = useState<Item[]>([]);
   const [newItem, setNewItem] = useState({ name: "", quantity: "" });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [itemBeingEdited, setItemBeingEdited] = useState<Item | null>(null);
   const LIST_ID = "ba4f78a4-2d10-47a1-a70e-094e1f827bdf";
 
   // Fetch Items aus Supabase
@@ -87,6 +90,47 @@ export default function HomePage() {
     }
   };
 
+  const handleEditItem = async (
+    id: string,
+    updated: { name: string; quantity: string | null }
+  ) => {
+    const { error } = await supabase.from("items").update(updated).eq("id", id);
+    if (error) {
+      console.error("Fehler beim Bearbeiten:", error.message);
+    } else {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                ...updated,
+                quantity: updated.quantity ?? undefined,
+              }
+            : item
+        )
+      );
+    }
+  };
+
+  const handleDeleteItem = async (id: string) => {
+    const { error } = await supabase.from("items").delete().eq("id", id);
+    if (error) {
+      console.error("Fehler beim Löschen:", error.message);
+    } else {
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    }
+  };
+
+  const openEditDialog = (item: Item) => {
+    setItemBeingEdited(item);
+    setEditDialogOpen(true);
+  };
+
+  const closeEditDialog = () => {
+    setEditDialogOpen(false);
+    setItemBeingEdited(null);
+  };
+
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
@@ -94,35 +138,34 @@ export default function HomePage() {
       </Typography>
 
       {/* Eingabeformular */}
-      <Box sx={{ display: "flex", marginBottom: 2 }}>
+      <Card sx={{ padding: "10px", display: "flex", gap: 2, marginBottom: 2 }}>
         <TextField
           label="Name"
           variant="outlined"
-          fullWidth
           value={newItem.name}
           onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-          sx={{ marginRight: 2 }}
+          sx={{ flex: 2 }}
         />
         <TextField
           label="Menge"
           variant="outlined"
-          fullWidth
           value={newItem.quantity}
           onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
+          sx={{ flex: 1 }}
         />
         <IconButton
           onClick={handleAddItem}
           color="primary"
-          sx={{ marginLeft: 2 }}
+          sx={{ alignSelf: "center" }}
         >
           <AddIcon />
         </IconButton>
-      </Box>
+      </Card>
 
       <List>
         {/* List Items */}
         {items
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) // Sortieren nach order
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
           .map((item) => (
             <ShoppingItem
               key={item.id}
@@ -131,9 +174,20 @@ export default function HomePage() {
               quantity={item.quantity}
               checked={item.checked}
               onToggle={toggleChecked}
+              onDelete={handleDeleteItem}
+              onEditClick={() => openEditDialog(item)}
             />
           ))}
       </List>
+      {itemBeingEdited && (
+        <EditItemDialog
+          open={editDialogOpen}
+          onClose={closeEditDialog}
+          initialName={itemBeingEdited.name}
+          initialQuantity={itemBeingEdited.quantity}
+          onSave={(updated) => handleEditItem(itemBeingEdited.id, updated)}
+        />
+      )}
     </Container>
   );
 }

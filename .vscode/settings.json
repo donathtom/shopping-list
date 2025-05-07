@@ -1,6 +1,7 @@
 {
   "conventionalCommits.scopes": [
     "general",
-    "list"
+    "list",
+    "item"
   ]
 }
