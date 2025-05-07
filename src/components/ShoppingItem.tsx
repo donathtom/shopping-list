@@ -1,14 +1,14 @@
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import {
-  Box,
   Card,
   Checkbox,
   IconButton,
   ListItem,
   ListItemButton,
   ListItemText,
+  Box,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 
 export default function ShoppingItem({
   id,
@@ -16,53 +16,44 @@ export default function ShoppingItem({
   quantity,
   checked,
   onToggle,
-  onEdit,
   onDelete,
+  onEditClick, // neu!
 }: ShoppingItemProps & {
-  onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onEditClick?: () => void;
 }) {
   return (
-    <ListItem disablePadding>
+    <ListItem key={id} disableGutters>
       <Card
         sx={{
           width: "100%",
           display: "flex",
           alignItems: "center",
+          px: 2,
+          py: 1,
           "&:hover .action-buttons": {
             display: "flex",
           },
         }}
       >
-        <ListItemButton
-          onClick={() => onToggle(id, checked)}
-          sx={{ flexGrow: 1 }}
-        >
+        <ListItemButton onClick={() => onToggle(id, checked)} sx={{ flex: 1 }}>
           <Checkbox checked={checked} />
-          <ListItemText
-            primary={name}
-            secondary={
-              quantity && quantity.trim().length > 0 ? quantity : undefined
-            }
-          />
+          <ListItemText primary={name} secondary={quantity} />
         </ListItemButton>
 
         <Box
-          sx={{
-            display: {
-              xs: "flex", // auf Mobile immer sichtbar
-              sm: "none", // ab "sm" (600px) nur auf Hover sichtbar
-            },
-            gap: 1,
-            ml: "auto",
-          }}
           className="action-buttons"
+          sx={{
+            display: { xs: "flex", sm: "none" },
+            gap: 1,
+            ml: 1,
+          }}
         >
-          <IconButton onClick={() => onEdit?.(id)} size="small">
-            <EditIcon fontSize="small" />
+          <IconButton onClick={onEditClick}>
+            <EditIcon />
           </IconButton>
-          <IconButton onClick={() => onDelete?.(id)} size="small">
-            <DeleteIcon fontSize="small" />
+          <IconButton onClick={() => onDelete?.(id)}>
+            <DeleteIcon />
           </IconButton>
         </Box>
       </Card>
