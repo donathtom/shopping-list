@@ -1,17 +1,15 @@
-import { useEffect, useState } from "react";
-import {
-  Container,
-  List,
-  Typography,
-  Card,
-  ListItemButton,
-  ListItemText,
-  TextField,
-  Button,
-  Box,
-} from "@mui/material";
-import { supabase } from "@/lib/supabase"; // Stelle sicher, dass du supabase importiert hast
 import ShoppingItem from "@/components/ShoppingItem";
+import { supabase } from "@/lib/supabase"; // Stelle sicher, dass du supabase importiert hast
+import AddIcon from "@mui/icons-material/Add";
+import {
+  Box,
+  Container,
+  IconButton,
+  List,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 
 export default function HomePage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -65,25 +63,27 @@ export default function HomePage() {
     return maxOrder + 1;
   };
 
-  // Item hinzufügen
   const handleAddItem = async () => {
-    if (newItem.name.trim() === "" || newItem.quantity.trim() === "") return;
+    if (newItem.name.trim() === "") return; // Name ist erforderlich
 
     const newItemData = {
       list_id: LIST_ID,
       name: newItem.name,
-      quantity: newItem.quantity,
+      quantity: newItem.quantity.trim() === "" ? null : newItem.quantity, // Wenn keine Menge angegeben wird, setze sie auf null
       checked: false,
       order: getNextOrderValue(),
     };
 
-    const { data, error } = await supabase.from("items").insert([newItemData]);
+    const { data, error } = await supabase
+      .from("items")
+      .insert([newItemData])
+      .select();
 
     if (error) {
       console.error("Fehler beim Hinzufügen:", error.message);
-    } else {
-      setItems([...items, data![0]]);
-      setNewItem({ name: "", quantity: "" }); // Formular zurücksetzen
+    } else if (data) {
+      setNewItem({ name: "", quantity: "" });
+      setItems([...items, data[0]]);
     }
   };
 
@@ -110,14 +110,13 @@ export default function HomePage() {
           value={newItem.quantity}
           onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
         />
-        <Button
+        <IconButton
           onClick={handleAddItem}
-          variant="contained"
           color="primary"
           sx={{ marginLeft: 2 }}
         >
-          Hinzufügen
-        </Button>
+          <AddIcon />
+        </IconButton>
       </Box>
 
       <List>
@@ -134,13 +133,6 @@ export default function HomePage() {
               onToggle={toggleChecked}
             />
           ))}
-
-        {/* Leere Card für "Hinzufügen"-Button */}
-        <Card sx={{ width: "100%", marginTop: 2 }}>
-          <ListItemButton onClick={() => {}} sx={{ justifyContent: "center" }}>
-            <ListItemText primary="+" sx={{ textAlign: "center" }} />
-          </ListItemButton>
-        </Card>
       </List>
     </Container>
   );
