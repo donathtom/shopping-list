@@ -24,9 +24,9 @@ export default function ListSpeedDial({
   };
 
   const actions = [
-    { icon: <EditIcon />, name: "Bearbeiten", onClick: onEdit },
-    { icon: <DeleteIcon />, name: "Löschen", onClick: onDelete },
-    { icon: <ShareIcon />, name: "Teilen", onClick: onShare },
+    { icon: <EditIcon />, name: "Bearbeiten", onClick: onEdit, enabled: true },
+    { icon: <DeleteIcon />, name: "Löschen", onClick: onDelete, enabled: true },
+    { icon: <ShareIcon />, name: "Teilen", onClick: onShare, enabled: false },
   ];
 
   return (
@@ -48,16 +48,18 @@ export default function ListSpeedDial({
           onFocus: (e) => e.stopPropagation(),
         }}
       >
-        {actions.map((action) => (
-          <SpeedDialAction
-            key={action.name}
-            icon={action.icon}
-            onClick={() => handleAction(action.onClick)}
-            slotProps={{
-              tooltip: { title: action.name },
-            }}
-          />
-        ))}
+        {actions
+          .filter((action) => action.enabled == true)
+          .map((action) => (
+            <SpeedDialAction
+              key={action.name}
+              icon={action.icon}
+              onClick={() => handleAction(action.onClick)}
+              slotProps={{
+                tooltip: { title: action.name },
+              }}
+            />
+          ))}
       </SpeedDial>
     </Box>
   );
