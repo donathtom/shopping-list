@@ -8,25 +8,30 @@ import {
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 
-export default function NewListDialog({
+export default function ListTitleDialog({
   open,
   onClose,
   onSave,
+  initialName = "",
+  dialogTitle = "Neue Liste erstellen",
 }: {
   open: boolean;
   onClose: () => void;
   onSave: (name: string) => void;
+  initialName?: string;
+  dialogTitle?: string;
 }) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
+      setName(initialName);
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [open]);
+  }, [open, initialName]);
 
   const handleSave = () => {
     if (name.trim() === "") return;
@@ -40,8 +45,8 @@ export default function NewListDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>Neue Liste erstellen</DialogTitle>
+    <Dialog open={open} onClose={handleClose} disableRestoreFocus>
+      <DialogTitle>{dialogTitle}</DialogTitle>
       <DialogContent>
         <TextField
           inputRef={inputRef}
