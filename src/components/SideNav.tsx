@@ -21,18 +21,17 @@ export default function SideNav({
   onSelectList,
   onAddList,
   onSettings,
-}: {
-  onSelectList: (id: string) => void;
-  onAddList: () => void;
-  onSettings: () => void;
-}) {
+  onListsChange,
+}: SideNavProps) {
   const [open, setOpen] = useState(false);
-  const [lists, setLists] = useState<{ id: string; name: string }[]>([]);
+  const [lists, setLists] = useState<ShoppingList[]>([]);
 
   const fetchLists = async () => {
     const { data, error } = await supabase
       .from("shopping_lists")
-      .select("id, name");
+      .select("*")
+      .order("created_at", { ascending: false });
+
     if (error) {
       console.error("Fehler beim Laden der Listen:", error.message);
     } else {
@@ -42,6 +41,7 @@ export default function SideNav({
 
   useEffect(() => {
     fetchLists();
+    onListsChange(fetchLists);
   }, []);
 
   return (

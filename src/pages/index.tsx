@@ -1,13 +1,20 @@
+import ConfirmDialog from "@/components/ConfirmDialog";
 import EditItemDialog from "@/components/EditItemDialog";
+import ListSpeedDial from "@/components/ListSpeedDial";
+import ListTitleDialog from "@/components/ListTitleDialog";
 import ShoppingItem from "@/components/ShoppingItem";
 import SideNav from "@/components/SideNav";
 import { supabase } from "@/lib/supabase";
 import AddIcon from "@mui/icons-material/Add";
 import {
+  Box,
   Card,
   Container,
   IconButton,
   List,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
   TextField,
   Typography,
 } from "@mui/material";
@@ -18,9 +25,14 @@ export default function HomePage() {
   const [items, setItems] = useState<Item[]>([]);
   const [newItem, setNewItem] = useState({ name: "", quantity: "" });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemBeingEdited, setItemBeingEdited] = useState<Item | null>(null);
   const [listId, setListId] = useState<string | null>(null);
   const [listName, setListName] = useState<string>("");
+
+  const [refreshLists, setRefreshLists] = useState<() => void>(() => {});
 
   // Fetch Items aus Supabase
   const fetchItems = async () => {
@@ -168,17 +180,76 @@ export default function HomePage() {
     setItemBeingEdited(null);
   };
 
+  const handleCreateList = async (name: string) => {
+    const { data, error } = await supabase
+      .from("shopping_lists")
+      .insert([{ name }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Fehler beim Erstellen:", error.message);
+      return;
+    }
+
+    if (data) {
+      setListId(data.id);
+      localStorage.setItem("lastUsedListId", data.id);
+      refreshLists();
+    }
+
+    setShowNewDialog(false);
+  };
+
+  const handleRenameList = async (newName: string) => {
+    if (!listId) return;
+
+    const { error } = await supabase
+      .from("shopping_lists")
+      .update({ name: newName })
+      .eq("id", listId);
+
+    if (error) {
+      console.error("Fehler beim Umbenennen der Liste:", error.message);
+      return;
+    }
+
+    setListName(newName);
+    setShowEditDialog(false);
+    refreshLists?.();
+  };
+
+  const handleDeleteList = async () => {
+    if (!listId) return;
+
+    const { error } = await supabase
+      .from("shopping_lists")
+      .delete()
+      .eq("id", listId);
+
+    if (error) {
+      console.error("Fehler beim Löschen:", error.message);
+    } else {
+      setListId(null);
+      refreshLists(); // oder: await fetchLists()
+    }
+
+    setShowDeleteConfirm(false);
+  };
+
   return (
     <>
       <SideNav
         onSelectList={(id) => setListId(id)}
-        onAddList={() => console.log("Neue Liste erstellen")}
+        onAddList={() => setShowNewDialog(true)}
         onSettings={() => router.push("/settings")}
+        onListsChange={(fn) => setRefreshLists(() => fn)}
       />
-      <Container>
+      <Container sx={{ position: "relative", minHeight: "100vh" }}>
         <Typography variant="h4" gutterBottom>
           {listName}
         </Typography>
+
         <Card
           sx={{ padding: "10px", display: "flex", gap: 2, marginBottom: 2 }}
         >
@@ -232,6 +303,31 @@ export default function HomePage() {
             onSave={(updated) => handleEditItem(itemBeingEdited.id, updated)}
           />
         )}
+        <ListTitleDialog
+          open={showNewDialog}
+          onClose={() => setShowNewDialog(false)}
+          onSave={(name) => handleCreateList(name)}
+        />
+        <ListSpeedDial
+          onEdit={() => setShowEditDialog(true)}
+          onDelete={() => setShowDeleteConfirm(true)}
+          onShare={() => console.log("Teilen")}
+        />
+        <ListTitleDialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          onSave={(name) => handleRenameList(name)}
+          initialName={listName}
+          dialogTitle="Liste umbenennen"
+        />
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          title="Liste löschen"
+          content={`Willst du die Liste "${listName}" wirklich löschen?`}
+          confirmActionLabel="Löschen"
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDeleteList}
+        />
       </Container>
     </>
   );
