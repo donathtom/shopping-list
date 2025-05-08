@@ -1,3 +1,4 @@
+import ConfirmDialog from "@/components/ConfirmDialog";
 import EditItemDialog from "@/components/EditItemDialog";
 import ListSpeedDial from "@/components/ListSpeedDial";
 import ListTitleDialog from "@/components/ListTitleDialog";
@@ -26,6 +27,7 @@ export default function HomePage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemBeingEdited, setItemBeingEdited] = useState<Item | null>(null);
   const [listId, setListId] = useState<string | null>(null);
   const [listName, setListName] = useState<string>("");
@@ -217,6 +219,24 @@ export default function HomePage() {
     refreshLists?.();
   };
 
+  const handleDeleteList = async () => {
+    if (!listId) return;
+
+    const { error } = await supabase
+      .from("shopping_lists")
+      .delete()
+      .eq("id", listId);
+
+    if (error) {
+      console.error("Fehler beim Löschen:", error.message);
+    } else {
+      setListId(null);
+      refreshLists(); // oder: await fetchLists()
+    }
+
+    setShowDeleteConfirm(false);
+  };
+
   return (
     <>
       <SideNav
@@ -290,7 +310,7 @@ export default function HomePage() {
         />
         <ListSpeedDial
           onEdit={() => setShowEditDialog(true)}
-          onDelete={() => console.log("Löschen")}
+          onDelete={() => setShowDeleteConfirm(true)}
           onShare={() => console.log("Teilen")}
         />
         <ListTitleDialog
@@ -299,6 +319,14 @@ export default function HomePage() {
           onSave={(name) => handleRenameList(name)}
           initialName={listName}
           dialogTitle="Liste umbenennen"
+        />
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          title="Liste löschen"
+          content={`Willst du die Liste "${listName}" wirklich löschen?`}
+          confirmActionLabel="Löschen"
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDeleteList}
         />
       </Container>
     </>
