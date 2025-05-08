@@ -26,6 +26,7 @@ export default function ShoppingItem({
     <ListItem key={id} disableGutters>
       <Card
         sx={{
+          opacity: checked ? 0.6 : 1,
           width: "100%",
           display: "flex",
           alignItems: "center",
@@ -38,7 +39,14 @@ export default function ShoppingItem({
       >
         <ListItemButton onClick={() => onToggle(id, checked)} sx={{ flex: 1 }}>
           <Checkbox checked={checked} />
-          <ListItemText primary={name} secondary={quantity} />
+          <ListItemText
+            primary={name}
+            secondary={quantity}
+            sx={{
+              textDecoration: checked ? "line-through" : "none",
+              color: checked ? "text.disabled" : "text.primary",
+            }}
+          />
         </ListItemButton>
 
         <Box
