@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import AddIcon from "@mui/icons-material/Add";
 import ListIcon from "@mui/icons-material/List";
+import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
@@ -15,7 +16,9 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
+import router from "next/router";
 import { useEffect, useState } from "react";
+import { logout } from "../functions/logout";
 
 export default function SideNav({
   onSelectList,
@@ -90,6 +93,18 @@ export default function SideNav({
           <Divider />
 
           <Box sx={{ position: "absolute", bottom: 0, width: "100%" }}>
+            <ListItem disablePadding>
+              <ListItemButton
+                onClick={() => {
+                  logout().then(() => router.push("/login"));
+                }}
+              >
+                <ListItemIcon>
+                  <LogoutIcon />
+                </ListItemIcon>
+                <ListItemText primary="Abmelden" />
+              </ListItemButton>
+            </ListItem>
             <ListItemButton
               onClick={() => {
                 onSettings();
