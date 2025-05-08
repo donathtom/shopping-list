@@ -1,4 +1,5 @@
 import EditItemDialog from "@/components/EditItemDialog";
+import NewListDialog from "@/components/NewListDialog";
 import ShoppingItem from "@/components/ShoppingItem";
 import SideNav from "@/components/SideNav";
 import { supabase } from "@/lib/supabase";
@@ -18,9 +19,12 @@ export default function HomePage() {
   const [items, setItems] = useState<Item[]>([]);
   const [newItem, setNewItem] = useState({ name: "", quantity: "" });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showNewListDialog, setShowNewListDialog] = useState(false);
   const [itemBeingEdited, setItemBeingEdited] = useState<Item | null>(null);
   const [listId, setListId] = useState<string | null>(null);
   const [listName, setListName] = useState<string>("");
+
+  const [refreshLists, setRefreshLists] = useState<() => void>(() => {});
 
   // Fetch Items aus Supabase
   const fetchItems = async () => {
@@ -168,12 +172,34 @@ export default function HomePage() {
     setItemBeingEdited(null);
   };
 
+  const handleCreateList = async (name: string) => {
+    const { data, error } = await supabase
+      .from("shopping_lists")
+      .insert([{ name }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Fehler beim Erstellen:", error.message);
+      return;
+    }
+
+    if (data) {
+      setListId(data.id);
+      localStorage.setItem("lastUsedListId", data.id);
+      refreshLists();
+    }
+
+    setShowNewListDialog(false);
+  };
+
   return (
     <>
       <SideNav
         onSelectList={(id) => setListId(id)}
-        onAddList={() => console.log("Neue Liste erstellen")}
+        onAddList={() => setShowNewListDialog(true)}
         onSettings={() => router.push("/settings")}
+        onListsChange={(fn) => setRefreshLists(() => fn)}
       />
       <Container>
         <Typography variant="h4" gutterBottom>
@@ -232,6 +258,11 @@ export default function HomePage() {
             onSave={(updated) => handleEditItem(itemBeingEdited.id, updated)}
           />
         )}
+        <NewListDialog
+          open={showNewListDialog}
+          onClose={() => setShowNewListDialog(false)}
+          onSave={handleCreateList}
+        />
       </Container>
     </>
   );
