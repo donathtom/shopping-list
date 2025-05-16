@@ -1,4 +1,6 @@
 type ShoppingList = {
-    id: string;
-    name: string;
-  };
+  id: string;
+  name: string;
+  createdAt: Date;
+  userId: string;
+};

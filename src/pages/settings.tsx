@@ -1,7 +1,7 @@
 import { Typography } from "@mui/material";
 
-export default function HomePage() {
+export default function Settings() {
   {
-    return <Typography variant="h1">Settings</Typography>;
+    return <Typography variant="h2">Settings</Typography>;
   }
 }

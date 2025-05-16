@@ -2,13 +2,11 @@ import { supabase } from "@/lib/supabase";
 import AddIcon from "@mui/icons-material/Add";
 import ListIcon from "@mui/icons-material/List";
 import LogoutIcon from "@mui/icons-material/Logout";
-import MenuIcon from "@mui/icons-material/Menu";
 import SettingsIcon from "@mui/icons-material/Settings";
 import {
   Box,
   Divider,
   Drawer,
-  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -19,52 +17,38 @@ import {
 import router from "next/router";
 import { useEffect, useState } from "react";
 import { logout } from "../functions/logout";
+import BurgerButton from "./BurgerButton";
+import { useShoppingListContext } from "@/contexts/ShoppingListContext";
 
-export default function SideNav({
-  onSelectList,
-  onAddList,
-  onSettings,
-  onListsChange,
-}: SideNavProps) {
+export default function SideNav() {
   const [open, setOpen] = useState(false);
-  const [lists, setLists] = useState<ShoppingList[]>([]);
-
-  const fetchLists = async () => {
-    const { data, error } = await supabase
-      .from("shopping_lists")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Fehler beim Laden der Listen:", error.message);
-    } else {
-      setLists(data);
-    }
-  };
+  const { lists, setSelectedListId, refreshLists, createList } =
+    useShoppingListContext();
 
   useEffect(() => {
-    fetchLists();
-    onListsChange(fetchLists);
+    refreshLists();
   }, []);
 
   return (
     <>
-      <IconButton onClick={() => setOpen(true)} edge="start" sx={{ m: 1 }}>
-        <MenuIcon />
-      </IconButton>
+      <Box sx={{ position: "fixed", top: 8, zIndex: 1301 }}>
+        <BurgerButton open={open} toggle={() => setOpen(!open)} />
+      </Box>
 
       <Drawer open={open} onClose={() => setOpen(false)}>
         <Box sx={{ width: 250 }} role="presentation">
-          <Typography variant="h6" sx={{ p: 2 }}>
-            Listen
-          </Typography>
+          <Box sx={{ display: "flex", gap: 2, px: 2, py: 3 }}>
+            <Typography variant="h5" sx={{ paddingLeft: "58px" }}>
+              Listen
+            </Typography>
+          </Box>
 
           <List>
             {lists.map((list) => (
               <ListItem key={list.id} disablePadding>
                 <ListItemButton
                   onClick={() => {
-                    onSelectList(list.id);
+                    setSelectedListId(list.id);
                     setOpen(false);
                   }}
                 >
@@ -78,7 +62,7 @@ export default function SideNav({
             <ListItem disablePadding>
               <ListItemButton
                 onClick={() => {
-                  onAddList();
+                  createList("Neue Liste");
                   setOpen(false);
                 }}
               >
@@ -107,7 +91,7 @@ export default function SideNav({
             </ListItem>
             <ListItemButton
               onClick={() => {
-                onSettings();
+                router.push("/settings");
                 setOpen(false);
               }}
             >
